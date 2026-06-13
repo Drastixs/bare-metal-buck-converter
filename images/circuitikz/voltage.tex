@@ -1,0 +1,32 @@
+\documentclass[border=6pt]{standalone}
+\usepackage[siunitx, RPvoltages]{circuitikz}
+\usetikzlibrary{calc}
+\begin{document}
+\begin{circuitikz}[american, line width=0.8pt, font=\sffamily]
+
+  \node[op amp] (OA) {LM324};
+
+  % ---- inverting input: Rin from the high net, Rf feedback from the output ----
+  \coordinate (ninv) at ($(OA.-)+(-1,0)$);
+  \draw (OA.-) -- (ninv);
+  \draw (ninv) to[R, l_=\SI{5.1}{\kilo\ohm}] ($(ninv)+(-2.6,0)$) node[left]{Vout};
+  \coordinate (fb) at ($(ninv)+(0,2)$);
+  \draw (ninv) -- (fb)
+        to[R, l=\SI{1}{\kilo\ohm}] ($(fb)+(3.6,0)$) coordinate(fbr);
+
+  % ---- non-inverting input: matching Rin from the low net, Rf to ground ----
+  \coordinate (npos) at ($(OA.+)+(-1,0)$);
+  \draw (OA.+) -- (npos);
+  \draw (npos) to[R, l_=\SI{5.1}{\kilo\ohm}] ($(npos)+(-2.6,0)$) node[left]{GND};
+  \draw (npos) to[R, l_=\SI{1}{\kilo\ohm}] ($(npos)+(0,-2)$) node[ground]{};
+
+  % ---- output ----
+  \draw (OA.out) -- ++(0.8,0) coordinate(o);
+  \draw (fbr) |- (o);
+  \draw (o) -- ++(1.4,0) node[ocirc]{} node[right]{ADC0 (Vfb)};
+
+  \node[align=center, font=\sffamily\bfseries] at ($(OA.north)+(0.4,2.6)$)
+        {Voltage feedback --- $\div5.1$ across load (LM324)};
+
+\end{circuitikz}
+\end{document}

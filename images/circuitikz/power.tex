@@ -1,0 +1,48 @@
+\documentclass[border=6pt]{standalone}
+\usepackage[siunitx, RPvoltages]{circuitikz}
+\usetikzlibrary{positioning}
+\ctikzset{bipoles/length=1.1cm}
+\begin{document}
+\begin{circuitikz}[american, line width=0.8pt, font=\sffamily]
+
+  % ---- supply ----
+  \draw (0,0) to[battery1, l_=\SI{9}{\volt}] (0,3);
+  \draw (1.8,3) to[C, l=$C_\text{supply}$] (1.8,0);
+
+  % ---- top rail to the switch node, freewheel diode, then the output line ----
+  \draw (0,3) -- (4,3) coordinate(sw);
+  \draw (sw) -- (5,3)
+        to[L, l=\SI{470}{\micro\henry}, name=L1] (7,3) coordinate(an)
+        to[R, l=\SI{0.1}{\ohm}, name=Rsh] (9,3) coordinate(vout);
+  \node[circ] at (an){};
+  \node[circ] at (vout){};
+
+  % current-sense / feedback tap labels
+  \draw (an)  -- ++(0,1.1) node[above]{\footnotesize A (Isense)};
+  \draw (vout)-- ++(0,1.1) node[above]{\footnotesize Vout (Vfb)};
+
+  % ---- freewheel catch diode: anode on the return rail, cathode up at sw ----
+  \draw (4,0) coordinate(rtn) to[D, l_=\shortstack{D1\\1N5819}] (sw);
+
+  % ---- output cap and load down to the return rail ----
+  \draw (vout) to[C, l_=\SI{100}{\micro\farad}, name=Cout] (9,0);
+  \draw (vout) -- (10.5,3) to[R, l=LOAD] (10.5,0);
+
+  % ---- ground-return rail, broken by the low-side MOSFET ----
+  \draw (0,0) -- (2.2,0);                 % ground side (battery-, Csupply-)
+  \node[nigfete, rotate=90, anchor=D] (Q1) at (2.2,0){};
+  \draw (Q1.S) -- (rtn);                  % return side (diode, Cout, load)
+  \draw (rtn) -- (9,0);                   % return rail under cap...
+  \draw (9,0) -- (10.5,0);                % ...and load
+  \node[circ] at (rtn){};
+  \node[circ] at (9,0){};
+  \node[below right=2pt and 1pt] at (Q1.S){\footnotesize Q1 IRLZ44N};
+
+  % gate driven by the PWM pin (label below)
+  \draw (Q1.G) -- ++(0,-1.1) node[below]{\footnotesize OC0B PWM};
+
+  % ground reference at the battery's negative terminal
+  \node[ground] at (0,0){};
+
+\end{circuitikz}
+\end{document}

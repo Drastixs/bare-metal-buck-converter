@@ -1,0 +1,18 @@
+\documentclass[border=6pt]{standalone}
+\usepackage[siunitx, RPvoltages]{circuitikz}
+\usetikzlibrary{calc}
+\begin{document}
+\begin{circuitikz}[american, line width=0.8pt, font=\sffamily]
+
+  % VCC -> potentiometer -> GND; wiper taps off to the MCU ADC
+  \draw (0,4) node[above]{VCC}
+        to[pR, name=pot] (0,0) node[ground]{};
+  \node[left] at ($(pot.wiper)+(-0.55,0.7)$){RV1};
+  \draw (pot.wiper) -- ++(1.2,0) node[ocirc]{} node[right]{ATtiny85 ADC};
+
+  \node[align=center, text width=8cm] at (1.0,5.4)
+        {\sffamily\bfseries Setpoint pot --- standalone divider\\
+         \sffamily read in software (separate from op-amps)};
+
+\end{circuitikz}
+\end{document}

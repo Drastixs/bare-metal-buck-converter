@@ -1,0 +1,5 @@
+*.elf
+images/circuitikz/*.pdf
+images/circuitikz/*.aux
+images/circuitikz/*.log
+.pi/

@@ -1,0 +1,127 @@
+#define F_CPU 8000000UL
+#include <avr/io.h>
+#include <util/delay.h>
+
+#include "driver/i2c.h"
+#define SSD1306_ADDR 0x3C
+
+// -------------------- I2C Functions --------------------
+
+// void i2c_init(void) {
+//     TWSR = 0x00;
+//     TWBR = 72; // 100kHz
+//     TWCR = (1 << TWEN);
+// }
+
+// void i2c_start(void) {
+//     TWCR = (1 << TWSTA) | (1 << TWEN) | (1 << TWINT);
+//     while (!(TWCR & (1 << TWINT)));
+// }
+
+// void i2c_stop(void) {
+//     TWCR = (1 << TWSTO) | (1 << TWEN) | (1 << TWINT);
+//     while (TWCR & (1 << TWSTO));
+// }
+
+// void i2c_write(uint8_t data) {
+//     TWDR = data;
+//     TWCR = (1 << TWEN) | (1 << TWINT);
+//     while (!(TWCR & (1 << TWINT)));
+// }
+
+// // -------------------- SSD1306 Functions --------------------
+
+void ssd1306_send_command(uint8_t cmd) {
+    i2c_start();
+    i2c_write(SSD1306_ADDR << 1);
+    i2c_write(0x00); // Control byte: 0x00 = command
+    i2c_write(cmd);
+    i2c_stop();
+}
+
+void ssd1306_send_data(uint8_t data) {
+    i2c_start();
+    i2c_write(SSD1306_ADDR << 1);
+    i2c_write(0x40); // Control byte: 0x40 = data
+    i2c_write(data);
+    i2c_stop();
+}
+
+void ssd1306_init(void) {
+    _delay_ms(100);
+    ssd1306_send_command(0xAE); // Display OFF
+    ssd1306_send_command(0x20); // Set memory addressing mode
+    ssd1306_send_command(0x00); // Horizontal addressing mode
+    ssd1306_send_command(0xB0); // Page start address (0)
+    ssd1306_send_command(0xC8); // COM Output Scan Direction
+    ssd1306_send_command(0x00); // Low column address
+    ssd1306_send_command(0x10); // High column address
+    ssd1306_send_command(0x40); // Start line address
+    ssd1306_send_command(0x81); // Set contrast
+    ssd1306_send_command(0x7F); // Contrast value
+    ssd1306_send_command(0xA1); // Segment re-map
+    ssd1306_send_command(0xA6); // Normal display
+    ssd1306_send_command(0xA8); // Multiplex ratio
+    ssd1306_send_command(0x1F); // 32-1 = 31
+    ssd1306_send_command(0xD3); // Display offset
+    ssd1306_send_command(0x00); // No offset
+    ssd1306_send_command(0xD5); // Display clock
+    ssd1306_send_command(0x80);
+    ssd1306_send_command(0xD9); // Pre-charge
+    ssd1306_send_command(0xF1);
+    ssd1306_send_command(0xDA); // COM pins config
+    ssd1306_send_command(0x02);
+    ssd1306_send_command(0xDB); // VCOMH
+    ssd1306_send_command(0x40);
+    ssd1306_send_command(0x8D); // Charge pump
+    ssd1306_send_command(0x14);
+    ssd1306_send_command(0xAF); // Display ON
+}
+
+void ssd1306_clear(void) {
+    for (uint8_t page = 0; page < 4; page++) {
+        ssd1306_send_command(0xB0 + page); // Set page
+        ssd1306_send_command(0x00);        // Column low
+        ssd1306_send_command(0x10);        // Column high
+        for (uint8_t col = 0; col < 128; col++) {
+            ssd1306_send_data(0x00);       // Clear byte
+        }
+    }
+}
+
+
+void fillPage(uint8_t page){
+	ssd1306_send_command(0xB0 + page);
+	ssd1306_send_command(0x00);
+	ssd1306_send_command(0x10);
+	
+	for (int i = 0;i <= 127; i++){
+		ssd1306_send_data(0xFF);
+	}
+}
+
+void clearPage(uint8_t page){
+	ssd1306_send_command(0xB0 + page);
+	ssd1306_send_command(0x0F);
+	ssd1306_send_command(0x1F);
+	
+	for (uint8_t i = 0;i <= 127; i++){
+		ssd1306_send_data(0x00);
+	}
+}
+
+
+
+// -------------------- Main --------------------
+
+int main(void) {
+    i2c_init();
+    ssd1306_init();
+    ssd1306_clear();
+
+    fillPage(2);
+    while (1) {
+        // Loop forever
+    }
+}
+
